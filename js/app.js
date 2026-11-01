@@ -313,12 +313,43 @@
     });
   }, 'publik');
 
+  // ---------------- Layar diagnosis konfigurasi ----------------
+  /** Menjelaskan PERSIS kenapa js/config.js belum terbaca, beserta langkah perbaikannya. */
+  function layarKonfigurasi(cek) {
+    const contoh = '<code class="kode-blok">GAS_URL: \'https://script.google.com/macros/s/XXXX/exec\'</code>';
+    const nilai = cek.url ? '<p class="kecil teks-2">Yang terbaca sekarang:</p><code class="kode-blok kode-salah">' + esc(cek.url) + '</code>' : '';
+    const edit = '<li><b>Cara tercepat:</b> buka repository Anda di github.com → folder <code>js</code> → <code>config.js</code> → ikon pensil ✏️ → ganti alamatnya → <b>Commit changes</b>. (Mengedit satu berkas di GitHub aman; yang tidak boleh adalah "Upload files". Sebelum <code>git push</code> berikutnya dari komputer, jalankan <code>git pull</code> dulu.)</li>';
+    const ambil = '<li>Ambil URL di Apps Script: <b>Terapkan → Kelola deployment</b> → salin <b>URL aplikasi web</b> (berakhiran <code>/exec</code>).</li>';
+    const tunggu = '<li>Tunggu 1–2 menit, lalu tekan <b>Periksa lagi</b> di bawah.</li>';
+    const PESAN = {
+      TIDAK_ADA: ['Berkas js/config.js tidak ditemukan', 'Situs ini tidak memiliki berkas <code>js/config.js</code>, atau berkasnya tidak berada di dalam folder <code>js</code>.',
+        '<li>Buka repository di github.com dan pastikan ada folder <code>js</code> yang berisi <code>config.js</code> (bukan <code>config.js</code> lepas di halaman utama repo).</li><li>Jika berkas tercecer di halaman utama repo, kirim ulang lewat terminal dari folder <code>physicslearn-frontend</code> (lihat PANDUAN-INSTALASI.md bagian B5), jangan lewat "Upload files".</li>' + tunggu],
+      CONTOH: ['Alamat server belum diisi', '<code>js/config.js</code> masih berisi alamat contoh (<code>GANTI_DENGAN_ID_DEPLOYMENT</code>).',
+        ambil + edit + '<li>Atau edit di komputer, lalu dari folder <code>physicslearn-frontend</code> jalankan <code>git add .</code>, <code>git commit -m "Isi config"</code>, <code>git push</code>.</li>' + tunggu],
+      KOSONG: ['Alamat server belum diisi', 'Isian <code>GAS_URL</code> di <code>js/config.js</code> kosong.', ambil + edit + tunggu],
+      DEV: ['Memakai URL uji coba (/dev)', 'Alamat yang berakhiran <code>/dev</code> hanya bisa dibuka pemilik skrip. Aplikasi memerlukan alamat yang berakhiran <code>/exec</code>.', ambil + edit + tunggu],
+      BUKAN_WEBAPP: ['Ini bukan alamat Web App', 'Yang ditempel tampaknya alamat editor Apps Script atau spreadsheet, bukan URL aplikasi web.', ambil + edit + tunggu],
+      FORMAT: ['Alamat server tidak dikenali', 'Isian <code>GAS_URL</code> di <code>js/config.js</code> bukan URL Web App Apps Script.', ambil + edit + tunggu],
+      RUSAK: ['Isi js/config.js tidak terbaca', 'Baris <code>GAS_URL</code> tidak ditemukan atau tanda petiknya hilang. Kembalikan isinya ke bentuk di bawah ini.', edit + tunggu]
+    };
+    const p = PESAN[cek.kode] || PESAN.FORMAT;
+    app0().innerHTML = '<section class="auth"><div class="auth-kartu-wrap"><div class="auth-kartu kartu-konfig">' + LOGO_DEFAULT +
+      '<h1>' + esc(p[0]) + '</h1><p class="teks-2">' + p[1] + '</p>' + nilai +
+      '<p class="kecil teks-2">Bentuk yang benar di <code>js/config.js</code>:</p>' + contoh +
+      '<ol class="langkah-konfig">' + p[2] + '</ol>' +
+      '<button class="btn btn-primary btn-penuh" data-periksa>' + ikon('refresh') + 'Periksa lagi</button>' +
+      '<p class="kecil teks-2">Kode: <span class="mono">' + esc(cek.kode) + '</span>. Petunjuk lengkap ada di PANDUAN-INSTALASI.md.</p></div></div></section>';
+    app0().querySelector('[data-periksa]').addEventListener('click', () => location.reload());
+  }
+  function app0() { return document.getElementById('app'); }
+
   // ---------------- Mulai aplikasi ----------------
   async function mulai() {
     const app = document.getElementById('app');
     if (!API.siap) {
-      app.innerHTML = '<section class="auth"><div class="auth-kartu-wrap"><div class="auth-kartu">' + LOGO_DEFAULT + '<h1>Konfigurasi belum lengkap</h1><p class="teks-2">Isi alamat Web App Apps Script (berakhiran <code>/exec</code>) di berkas <code>js/config.js</code>, lalu unggah ulang. Petunjuk lengkap ada di PANDUAN-INSTALASI.md.</p></div></div></section>';
-      return;
+      app.innerHTML = '<section class="auth"><div class="auth-kartu-wrap"><div class="auth-kartu">' + LOGO_DEFAULT + '<p class="teks-2">Memeriksa konfigurasi…</p></div></div></section>';
+      const cek = await API.periksaKonfigurasi();
+      if (!cek.ok) { layarKonfigurasi(cek); return; }
     }
     try { App.cfg = JSON.parse(localStorage.getItem('pl_cfg') || 'null'); App.me = JSON.parse(localStorage.getItem('pl_me') || 'null'); } catch (e) { App.cfg = null; App.me = null; }
     if (App.me && !API.sesi.token) App.me = null;

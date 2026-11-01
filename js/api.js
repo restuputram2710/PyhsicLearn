@@ -8,9 +8,44 @@
  *  - Coba ulang otomatis dengan jeda acak saat server sibuk / jaringan putus
  * ===================================================================== */
 (function () {
-  const CFG = window.APP_CONFIG || {};
-  const URL_API = String(CFG.GAS_URL || '');
-  const SIAP = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(URL_API) && !/GANTI|XXXX/.test(URL_API);
+  // ---------------- Konfigurasi URL Web App ----------------
+  // Toleran terhadap salah tempel yang umum (spasi, garis miring/parameter di akhir, URL akun
+  // Google Workspace /a/macros/<domain>/s/…), dan bisa mendiagnosis kenapa URL belum terbaca.
+  const POLA_GAS = /^https:\/\/script\.google\.com\/(?:a\/macros\/[^/]+|macros)\/s\/[A-Za-z0-9_-]{10,}\/(exec|dev)$/;
+  function cekUrl(mentah) {
+    const url = String(mentah || '').replace(/\s+/g, '').replace(/[?#].*$/, '').replace(/\/+$/, '');
+    if (!url) return { ok: false, kode: 'KOSONG', url };
+    if (/GANTI|XXXX/i.test(url)) return { ok: false, kode: 'CONTOH', url };
+    const m = url.match(POLA_GAS);
+    if (!m) return { ok: false, kode: /\/home\/projects\/|\/edit$|\/d\//.test(url) ? 'BUKAN_WEBAPP' : 'FORMAT', url };
+    if (m[1] === 'dev') return { ok: false, kode: 'DEV', url };
+    return { ok: true, kode: 'OK', url };
+  }
+  const CEK_AWAL = window.APP_CONFIG ? cekUrl(window.APP_CONFIG.GAS_URL) : { ok: false, kode: 'TIDAK_ADA', url: '' };
+  let URL_API = CEK_AWAL.ok ? CEK_AWAL.url : '';
+  let SIAP = CEK_AWAL.ok;
+
+  /**
+   * Dipanggil bila konfigurasi awal tidak valid: baca ulang js/config.js langsung dari server
+   * (tanpa cache browser/CDN). Menangani kasus config.js baru di-push tetapi browser masih
+   * memegang versi lama. Bila URL baru valid, API langsung memakainya.
+   */
+  async function periksaKonfigurasi() {
+    let teks = null, status = 0;
+    try {
+      const r = await fetch('js/config.js?cek=' + Date.now(), { cache: 'no-store' });
+      status = r.status;
+      if (r.ok) teks = await r.text();
+    } catch (e) { status = -1; }
+    let hasil;
+    if (teks === null) hasil = window.APP_CONFIG ? CEK_AWAL : { ok: false, kode: 'TIDAK_ADA', url: '', status };
+    else {
+      const m = teks.match(/GAS_URL\s*:\s*['"`]([^'"`]*)['"`]/);
+      hasil = m ? cekUrl(m[1]) : { ok: false, kode: 'RUSAK', url: '' };
+    }
+    if (hasil.ok) { URL_API = hasil.url; SIAP = true; API.siap = true; API.url = hasil.url; }
+    return hasil;
+  }
   const BACA = /^(app\.|materi\.(list|detail)|tugas\.(list|detail|pengumpulan)|ujian\.(list|hasil|detailGuru|pantau)|siswa\.(beranda|list|detail)|pengingat\.list|nilai\.|guru\.|kelas\.list|lokasi\.list|sesi\.(aktif|hadir|riwayat)|soal\.list|laporan\.|pengaturan\.get|rahasia\.status|sistem\.status|log\.|profil\.foto|import\.pindai)/;
   const Perf = { log: [], table() { console.table(this.log.slice(-40)); }, summary() {
     const by = {};
@@ -173,7 +208,7 @@
     fetch(URL_API + '?w=' + scope, { mode: 'no-cors' }).catch(() => {});
   }
 
-  const API = { siap: SIAP, url: URL_API, offset: 0, call, load, upload, warmUp, batch: (a, d) => Batcher.add(a, d), cache: { baca: bacaCache, tulis: tulisCache, bersihkan: bersihkanCache }, sesi: Sesi, perf: Perf, onAuthLost: null,
+  const API = { siap: SIAP, url: URL_API, cekAwal: CEK_AWAL, periksaKonfigurasi, offset: 0, call, load, upload, warmUp, batch: (a, d) => Batcher.add(a, d), cache: { baca: bacaCache, tulis: tulisCache, bersihkan: bersihkanCache }, sesi: Sesi, perf: Perf, onAuthLost: null,
     now() { return Date.now() + this.offset; } };
   window.API = API;
   window.Perf = Perf;

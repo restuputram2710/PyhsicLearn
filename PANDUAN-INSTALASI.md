@@ -186,6 +186,10 @@ Istilah singkat:
 
 4. Simpan. Jangan menaruh sandi atau kunci apa pun di berkas ini. URL `/exec` bukan rahasia.
 
+> **Sudah terlanjur di-push sebelum diisi?** Tidak masalah. Buka repository di github.com → folder `js` → `config.js` → ikon pensil ✏️ → ganti alamatnya → **Commit changes**. Tunggu 1–2 menit lalu muat ulang situs. Setelah mengedit di github.com, jalankan `git pull` di komputer sebelum `git push` berikutnya.
+>
+> Bila `config.js` belum benar, situs menampilkan layar yang menyebut penyebab pastinya (berkas tidak ditemukan, masih alamat contoh, memakai `/dev`, alamat editor, dan lain-lain) beserta langkah perbaikannya.
+
 ### B2. Pasang Git (sekali saja)
 
 - **Windows**: unduh dari https://git-scm.com/download/win, pasang dengan pilihan bawaan. Lalu buka **PowerShell**.
@@ -474,7 +478,7 @@ Fungsi pengelola (jalankan dari editor):
 ### Frontend
 
 1. Salin berkas baru ke folder `physicslearn-frontend` (timpa yang lama). **Jangan menimpa `js/config.js`** milik Anda.
-2. Dari folder itu:
+2. Dari folder itu (bila pernah mengedit berkas langsung di github.com, jalankan `git pull` lebih dulu):
 
    ```bash
    git add .
@@ -490,9 +494,12 @@ Fungsi pengelola (jalankan dari editor):
 
 | Yang terlihat | Penyebab | Solusi |
 |---|---|---|
-| Layar "Konfigurasi belum lengkap" | `js/config.js` masih berisi `GANTI_DENGAN_ID_DEPLOYMENT` | Isi URL `/exec` (B1), lalu `git add .` → `commit` → `push` |
+| Layar "Alamat server belum diisi" (kode `CONTOH`/`KOSONG`) | `js/config.js` masih berisi `GANTI_DENGAN_ID_DEPLOYMENT` atau kosong | Isi URL `/exec` (B1). Paling cepat: edit `js/config.js` langsung di github.com (ikon pensil) |
+| Layar "Berkas js/config.js tidak ditemukan" (kode `TIDAK_ADA`) | Berkas tidak ter-push, atau tercecer di luar folder `js` | Di github.com pastikan ada `js/config.js`. Bila berkas tercecer, push ulang dari folder `physicslearn-frontend` (B4–B5) |
+| Layar "Memakai URL uji coba (/dev)" / "Ini bukan alamat Web App" | Yang ditempel URL `/dev`, alamat editor, atau alamat spreadsheet | Salin **URL aplikasi web** dari Terapkan → Kelola deployment (berakhiran `/exec`) |
+| `git push` ditolak: `rejected … fetch first` | Ada perubahan yang dibuat langsung di github.com | Jalankan `git pull`, lalu `git push` lagi |
 | "Aplikasi belum dipasang" | `setupAppEnvironment` belum dijalankan | Jalankan (A4) |
-| "Server tidak merespons. Periksa koneksi lalu coba lagi." | URL salah (memakai `/dev`), akses bukan "Siapa saja", atau URL deployment berubah | Periksa A7. Pastikan URL di `config.js` sama persis dengan Kelola deployment |
+| "Server tidak merespons. Periksa koneksi lalu coba lagi." | Akses deployment bukan "Siapa saja", atau URL di `config.js` milik deployment lama | Periksa A7. Pastikan URL di `config.js` sama persis dengan Kelola deployment |
 | Perubahan backend tidak muncul | Lupa membuat **Versi baru** | Bagian I langkah 4 |
 | Situs GitHub "404 File not found" | Folder yang di-push salah (ada folder pembungkus) | Masuk ke folder yang berisi `index.html`, lalu `git init`, `git add .`, `git commit -m "Perbaiki"`, `git branch -M main`, `git remote add origin …`, `git push -u origin main --force` (menimpa isi repo yang salah) |
 | Tampilan polos tanpa warna | Berkas CSS/JS tidak berada di folder `css/` dan `js/` | Unggah ulang lewat terminal dari folder yang strukturnya utuh |

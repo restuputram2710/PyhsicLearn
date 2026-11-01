@@ -221,6 +221,12 @@ body.mode-fokus .shell { display: block !important; }
 .auth-kartu-wrap { flex: 1; margin-top: -44px; position: relative; z-index: 2; display: flex; }
 .auth-kartu { flex: 1; background: var(--surface); border-radius: var(--r-arch) var(--r-arch) 0 0; padding: 32px 22px 40px; display: flex; flex-direction: column; gap: 4px; }
 .auth-kartu h1 { font-size: 1.7rem; color: var(--primary); }
+.kartu-konfig { gap: 10px; }
+.kartu-konfig h1 { font-size: 1.45rem; margin: 0; }
+.kartu-konfig p { margin: 0; }
+.kode-blok { display: block; padding: 10px 12px; border-radius: var(--r); border: 1px solid var(--border); overflow-wrap: anywhere; white-space: normal; font-size: .82rem; }
+.kode-salah { background: var(--danger-bg, #FDECEC); color: var(--danger); border-color: color-mix(in srgb, var(--danger) 35%, transparent); }
+.langkah-konfig { margin: 4px 0 6px; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: .92rem; color: var(--text); }
 :root[data-tema="gelap"] .auth-kartu h1 { color: var(--text); }
 .auth-kartu > .logo-mark, .auth-kartu > svg { margin-bottom: 12px; }
 .pemisah { display: flex; align-items: center; gap: 12px; color: var(--text-2); font: 600 11px var(--f-mono); letter-spacing: .1em; text-transform: uppercase; margin: 14px 0 10px; }
